@@ -108,20 +108,6 @@ Follow these steps to use ATM Simulator.
 5. You can also request a mini statement for your account.
 6. The mini statement shows your name, your masked card number, you account balance and your last 10 transactions.
 
-<!-- Screenshots of ATM Simulator -->
-### Screenshots of ATM Simulator
-<img src="/screenshots/1.jpg"
-     style="display: inline-block; margin: 0 auto; width:600px; height:400px;">
-<img src="/screenshots/2.jpg"
-     style="display: inline-block; margin: 0 auto; width:800px; height:600px;">
-<img src="/screenshots/4.jpg"
-     style="display: inline-block; margin: 0 auto; width:800px; height:600px;">     
-<img src="/screenshots/5.jpg"
-     style="display: inline-block; margin: 0 auto; width:800px; height:600px;">
-<img src="/screenshots/6.jpg"
-     style="display: inline-block; margin: 0 auto; width:800px; height:450px;">
-<img src="/screenshots/3.jpg"
-     style="display: inline-block; margin: 0 auto; width:800px; height:700px;">
 <!-- GITHUB SETUP -->
 ## Pushing to GitHub
 

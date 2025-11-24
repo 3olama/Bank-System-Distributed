@@ -11,7 +11,6 @@ bankManagementSystem-main/
 ├── lib/                    # External libraries (JAR files)
 ├── sql/                    # Database SQL scripts
 ├── icons/                  # Image resources
-├── screenshots/            # Application screenshots
 ├── executable/             # Pre-built JAR executable
 └── Documentation files     # README, guides, etc.
 ```

@@ -51,6 +51,9 @@ desktop.ini
 *.properties.local
 config.local.*
 
+# Screenshots directory
+screenshots/
+
 # Exclude compiled classes in src directory (keep source only)
 # Note: .class files in src/ will be ignored but source .java files are tracked
 
