@@ -1,0 +1,23 @@
+package atm.simulator.system;
+
+import java.sql.*;
+
+public class Conn
+{	
+	Connection c;
+	Statement s;
+	public Conn ()
+	{	
+		String username = "root";
+		String password = "";
+		try
+		{
+			c = DriverManager.getConnection("jdbc:mysql:///bank_management_system", username, password);
+			s = c.createStatement();
+		}
+		catch(Exception e)
+		{
+			System.out.println(e);	
+		}
+	}	
+}

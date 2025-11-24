@@ -1,0 +1,56 @@
+# Compiled Java class files
+*.class
+**/*.class
+
+# Compiled output directories
+bin/
+build/
+out/
+target/
+
+# IDE specific files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Package files
+*.jar
+!lib/*.jar
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# User-specific configuration
+*.properties.local
+config.local.*
+
+# Exclude compiled classes in src directory (keep source only)
+# Note: .class files in src/ will be ignored but source .java files are tracked
+
