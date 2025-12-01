@@ -1,9 +1,0 @@
-module BankSystemDistributed {
-	//cette ligne dit à Java “Je veux utiliser le module graphique intégré de Java”.
-	 requires java.desktop;   // GUI
-	//Permet d’utiliser les classes JDBC pour accéder à la base de données
-	 requires java.sql;       // JDBC
-	 requires jcalendar;
-
-	 
-}

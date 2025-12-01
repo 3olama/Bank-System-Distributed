@@ -1,6 +1,0 @@
-INDEX VERSION 1.134+C:\Users\hp\eclipse-workspace\BankSystemRMI\.metadata\.plugins\org.eclipse.jdt.core
-2556234435.index
-1865797976.index
-198848272.index
-174325103.index
-3413270776.index
