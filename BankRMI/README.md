@@ -7,7 +7,7 @@ It simulates common ATM operations such as deposits, withdrawals, fast cash, bal
 
 Project Structure
 
-bankSystemRMI/            
+BankRMI/            
  ├── src/
  │   ├── client/      # Contains the GUI classes for the ATM client and the code to invoke RMI methods.
  │   ├── rmi/         # Contains RMI interfaces that define the remote methods for the banking operations.
