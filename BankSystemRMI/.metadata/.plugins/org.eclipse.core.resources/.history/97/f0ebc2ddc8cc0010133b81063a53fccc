@@ -1,0 +1,19 @@
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+
+public class TestRMI {
+    public static void main(String[] args) {
+        try {
+            BankServiceImpl service = new BankServiceImpl(); // ton impl
+            BankService stub = (BankService) UnicastRemoteObject.exportObject(service, 1099);
+
+            Registry registry = LocateRegistry.createRegistry(1099);
+            registry.rebind("bankService", stub);
+
+            System.out.println("Serveur RMI prêt !");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

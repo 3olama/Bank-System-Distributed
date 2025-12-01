@@ -1,0 +1,172 @@
+package server;
+import rmi.BankService;
+import util.Conn;
+
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.sql.*;
+
+public class BankServiceImpl extends UnicastRemoteObject implements BankService {
+
+    protected BankServiceImpl() throws RemoteException {
+        super();
+    }
+
+    @Override
+    public String login(String cardNumber, String pin) throws RemoteException {
+        String ssn = null;
+
+        try (Connection conn = Conn.getConnection()) {
+            String sql = "SELECT * FROM login WHERE cardNumber=? AND pin=?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, cardNumber);
+            ps.setString(2, pin);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()) return rs.getString("ssn");
+            rs.close();
+            ps.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RemoteException("Database error in login()", e);
+        }
+
+        return ssn; // null si login échoue
+    }
+    
+    @Override
+    public boolean signupStepOne(String formno, String name, String ssn, String dob,
+                                    String gender, String email, String marital,
+                                    String address, String city, String state, String zip)
+            throws RemoteException {
+
+        try {
+            Conn c = new Conn(); // ta classe de connexion à MySQL
+
+            String query = "INSERT INTO Customer(formno, name, ssn, dob, gender, email, mariatal, address, city, state, zip) " +
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            PreparedStatement ps = c.con.prepareStatement(query);
+            ps.setString(1, formno);
+            ps.setString(2, name);
+            ps.setString(3, ssn);
+            ps.setString(4, dob);
+            ps.setString(5, gender);
+            ps.setString(6, email);
+            ps.setString(7, marital);
+            ps.setString(8, address);
+            ps.setString(9, city);
+            ps.setString(10, state);
+            ps.setString(11, zip);
+
+            int rows = ps.executeUpdate();
+            return rows > 0;
+
+        } catch (Exception e) {
+            System.out.println("Signup Step 1 Error: " + e);
+            return false;
+        }
+    }
+
+    @Override
+    public double getBalance(String ssn) throws RemoteException {
+        try (Connection conn = Conn.getConnection()) {
+            String sql = "SELECT balance FROM Accounts WHERE ssn=?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, ssn);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()) return rs.getDouble("balance");
+            return -1;
+        } catch(Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    @Override
+    public boolean deposit(String ssn, double amount) throws RemoteException {
+        try (Connection conn = Conn.getConnection()) {
+            conn.setAutoCommit(false);
+            String sqlSel = "SELECT balance FROM Accounts WHERE ssn=? FOR UPDATE";
+            PreparedStatement ps = conn.prepareStatement(sqlSel);
+            ps.setString(1, ssn);
+            ResultSet rs = ps.executeQuery();
+            if(!rs.next()) { conn.rollback(); return false; }
+            double balance = rs.getDouble("balance") + amount;
+            PreparedStatement psUpd = conn.prepareStatement("UPDATE Accounts SET balance=? WHERE ssn=?");
+            psUpd.setDouble(1, balance);
+            psUpd.setString(2, ssn);
+            psUpd.executeUpdate();
+            PreparedStatement psIns = conn.prepareStatement("INSERT INTO Transactions(ssn, amount, type) VALUES(?,?,?)");
+            psIns.setString(1, ssn);
+            psIns.setDouble(2, amount);
+            psIns.setString(3, "Deposit");
+            psIns.executeUpdate();
+            conn.commit();
+            return true;
+        } catch(Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public int withdraw(String ssn, double amount, String pin) throws RemoteException {
+        try (Connection conn = Conn.getConnection()) {
+            conn.setAutoCommit(false);
+
+            // Vérifier PIN
+            PreparedStatement psPin = conn.prepareStatement("SELECT * FROM login WHERE ssn=? AND pin=?");
+            psPin.setString(1, ssn);
+            psPin.setString(2, pin);
+            if(!psPin.executeQuery().next()) { conn.rollback(); return 1; }
+
+            PreparedStatement psBal = conn.prepareStatement("SELECT balance FROM Accounts WHERE ssn=? FOR UPDATE");
+            psBal.setString(1, ssn);
+            ResultSet rs = psBal.executeQuery();
+            if(!rs.next()) { conn.rollback(); return 3; }
+
+            double balance = rs.getDouble("balance");
+            if(balance < amount) { conn.rollback(); return 2; }
+
+            balance -= amount;
+            PreparedStatement psUpd = conn.prepareStatement("UPDATE Accounts SET balance=? WHERE ssn=?");
+            psUpd.setDouble(1, balance);
+            psUpd.setString(2, ssn);
+            psUpd.executeUpdate();
+
+            PreparedStatement psIns = conn.prepareStatement("INSERT INTO Transactions(ssn, amount, type) VALUES(?,?,?)");
+            psIns.setString(1, ssn);
+            psIns.setDouble(2, amount);
+            psIns.setString(3, "Withdraw");
+            psIns.executeUpdate();
+
+            conn.commit();
+            return 0;
+        } catch(Exception e) {
+            e.printStackTrace();
+            return 3;
+        }
+    }
+
+    @Override
+    public boolean changePin(String ssn, String oldPin, String newPin) throws RemoteException {
+        try (Connection conn = Conn.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement("UPDATE Customer SET pin=? WHERE ssn=? AND pin=?");
+            ps.setString(1, newPin);
+            ps.setString(2, ssn);
+            ps.setString(3, oldPin);
+            return ps.executeUpdate() == 1;
+            
+        } catch(Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+
+    
+    
+    
+    
+}

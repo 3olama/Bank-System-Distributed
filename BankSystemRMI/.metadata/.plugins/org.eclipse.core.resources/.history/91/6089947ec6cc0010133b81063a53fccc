@@ -1,0 +1,133 @@
+package client;
+
+
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import rmi.BankService;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class deposit extends JFrame implements ActionListener {
+
+    JButton deposit1, deposit2, back;
+    String ssn, pin;
+    JTextField amountTF;
+    JLabel text, label;
+    JPasswordField pinTF;
+
+    public deposit(String ssn, String pin) {
+        setLayout(null);
+        this.ssn = ssn;
+        this.pin = pin;
+
+        ImageIcon img1 = new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
+        Image img2 = img1.getImage().getScaledInstance(900, 915, Image.SCALE_DEFAULT);
+        img1 = new ImageIcon(img2);
+        label = new JLabel(img1);
+        label.setBounds(0, 0, 900, 850);
+        add(label);
+
+        text = new JLabel("Please enter amount to deposit:");
+        text.setBounds(195, 290, 700, 35);
+        text.setFont(new Font("System", Font.BOLD, 18));
+        text.setForeground(Color.GREEN);
+        label.add(text);
+
+        amountTF = new JTextField();
+        amountTF.setBounds(175, 350, 320, 25);
+        amountTF.setFont(new Font("Raleway", Font.BOLD, 22));
+        label.add(amountTF);
+
+        pinTF = new JPasswordField();
+        pinTF.setBounds(200, 350, 220, 25);
+        pinTF.setFont(new Font("Raleway", Font.BOLD, 22));
+        label.add(pinTF);
+
+        deposit1 = new JButton("CONTINUE");
+        deposit1.setBounds(355, 465, 150, 24);
+        deposit1.addActionListener(this);
+        label.add(deposit1);
+
+        deposit2 = new JButton("DEPOSIT");
+        deposit2.setBounds(355, 465, 150, 24);
+        deposit2.addActionListener(this);
+        deposit2.setVisible(false);
+        label.add(deposit2);
+
+        back = new JButton("MAIN MENU");
+        back.setBounds(355, 500, 150, 24);
+        back.addActionListener(this);
+        label.add(back);
+
+        setSize(900, 900);
+        setLocation(300, 0);
+        setUndecorated(true);
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        String amount = "";
+
+        if (ae.getSource() == deposit1) {
+            amount = amountTF.getText();
+            if (amount.equals("")) {
+                JOptionPane.showMessageDialog(this, "Enter amount to deposit!");
+                amountTF.requestFocus();
+                return;
+            } else {
+                text.setText("Enter PIN:");
+                amountTF.setVisible(false);
+                pinTF.setVisible(true);
+                deposit1.setVisible(false);
+                deposit2.setVisible(true);
+            }
+
+        } else if (ae.getSource() == deposit2) {
+            String testpin = pinTF.getText();
+            if (testpin.equals(pin)) {
+                try {
+                    // Connexion au serveur RMI
+                    Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+                    BankService service = (BankService) registry.lookup("bankService");
+
+                    // Appel RMI pour déposer de l’argent
+                    boolean success = service.deposit(ssn, Double.parseDouble(amount));
+
+                    if (success) {
+                        JOptionPane.showMessageDialog(this,
+                                "Successfully deposited " + amount + "$ to your account!");
+                        setVisible(false);
+                        new TransactionsFrame(ssn, "", pin).setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                                "Unable to complete transaction at the moment. Please try again later!");
+                        resetDepositForm();
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this,
+                            "Error connecting to server:\n" + e.getMessage());
+                    resetDepositForm();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid PIN!");
+                resetDepositForm()
+            
+    }
+
+    private void resetDepositForm() {
+        text.setText("Please enter amount to deposit:");
+        amountTF.setVisible(true);
+        amountTF.setText("");
+        pinTF.setVisible(false);
+        deposit1.setVisible(true);
+        deposit2.setVisible(false);
+    }
+
+    public static void main(String[] args) {
+        new deposit("1234567890", "2968");
+    }
+}

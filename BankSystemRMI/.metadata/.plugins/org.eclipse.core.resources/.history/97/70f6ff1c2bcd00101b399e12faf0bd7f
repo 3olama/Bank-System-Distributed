@@ -1,0 +1,19 @@
+package rmi;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+public interface BankService extends Remote {
+    String login(String cardNumber, String pin) throws RemoteException;
+    boolean signupStepOne(
+            String formno, String name, String ssn, String dob,
+            String gender, String email, String marital,
+            String address, String city, String state, String zip
+        ) throws RemoteException;
+    double getBalance(String ssn) throws RemoteException;
+    boolean deposit(String ssn, double amount) throws RemoteException;
+    int withdraw(String ssn, double amount, String pin) throws RemoteException;
+    boolean changePin(String cardNumber, String oldPin, String newPin) throws RemoteException;
+
+    
+}

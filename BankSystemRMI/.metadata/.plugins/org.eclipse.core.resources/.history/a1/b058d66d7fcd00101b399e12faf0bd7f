@@ -1,0 +1,185 @@
+package client;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.ResultSet;
+import java.util.Date;
+import util.Conn;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import rmi.BankService;
+
+
+public class Withdraw  extends JFrame implements ActionListener{
+	
+	JButton withdraw1, withdraw2, back;
+	String ssn, pin;
+	JTextField amountTF;
+	JLabel text, label;
+	JPasswordField pinTF;
+	
+	public Withdraw(String ssn, String pin) {
+		
+		setLayout(null);
+		
+		this.ssn = ssn;
+		this.pin = pin;
+		
+		ImageIcon img1 = new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
+		Image img2 = img1.getImage().getScaledInstance(900, 915, Image.SCALE_DEFAULT);
+		img1 =  new ImageIcon(img2);
+		label = new JLabel(img1);
+		label.setBounds(0, 0, 900, 850);
+		add(label);
+		
+		text = new JLabel("Please enter amount to Withdraw:");
+		text.setBounds(187, 290, 700, 35);
+		text.setFont(new Font("System", Font.BOLD, 18));
+		text.setForeground(Color.GREEN);
+		label.add(text);
+		
+		amountTF = new JTextField();
+		amountTF.setBounds(175, 350, 320, 25);
+		amountTF.setFont(new Font("Raleway", Font.BOLD, 22));
+		label.add(amountTF);
+		
+		pinTF = new JPasswordField();
+		pinTF.setBounds(200, 350, 220, 25);
+		pinTF.setFont(new Font("Raleway", Font.BOLD, 22));
+		label.add(pinTF);
+		
+		withdraw1 = new JButton("CONTINUE");
+		withdraw1.setBounds(355, 465, 150, 24);
+		withdraw1.addActionListener(this);
+		label.add(withdraw1);
+		
+		withdraw2 = new JButton("WITHDRAW");
+		withdraw2.setBounds(355, 465, 150, 24);
+		withdraw2.addActionListener(this);
+		withdraw2.hide();
+		label.add(withdraw2);
+		
+		back = new JButton("MAIN MENU");
+		back.setBounds(355, 500, 150, 24);
+		back.addActionListener(this);
+		label.add(back);
+		
+		setSize(900, 900);
+		setLocation(300, 0);
+		setUndecorated(true);
+		setVisible(true);
+		
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent ae) {
+		if (ae.getSource() == withdraw1) {
+            String amount = amountTF.getText();
+            if (amount.equals("")) {
+                JOptionPane.showMessageDialog(this, "Enter amount to withdraw!");
+                amountTF.requestFocus();
+                return;
+            }			
+				text.setText("Enter PIN:");
+				amountTF.hide();
+				pinTF.show();
+				withdraw1.hide();
+				withdraw2.show();
+			}
+			
+		else if (ae.getSource() == withdraw2) {
+		    String testpin = pinTF.getText();
+		    if (testpin.equals("")) {
+                JOptionPane.showMessageDialog(this, "PIN is required!");
+                pinTF.requestFocus();
+                return;
+            }
+		    String amount = amountTF.getText();
+            if (amount.equals("")) {
+                JOptionPane.showMessageDialog(this, "Enter amount!");
+                amountTF.requestFocus();
+                return;
+            }
+
+		    try {
+		        double amountDouble = Double.parseDouble(amount); // amount récupéré avant CONTINUE
+
+		        // Connexion au serveur RMI
+		        Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+		        BankService service = BankService registry.lookup("bankService");
+
+		        // Appel de la méthode withdraw côté serveur
+		        int result = service.withdraw(ssn, amountDouble, testpin);
+
+		        switch(result) {
+		            case 0: // succès
+		                JOptionPane.showMessageDialog(this, amount + "$ successfully withdrawn!");
+		                setVisible(false);
+		                new Transactions(ssn, testpin);
+		                break;
+		            case 1: // PIN incorrect
+		                JOptionPane.showMessageDialog(this, "Invalid PIN!");
+		                pinTF.setText("");
+		                pinTF.requestFocus();
+		                break;
+		            case 2: // solde insuffisant
+		                JOptionPane.showMessageDialog(this, "Insufficient balance! Try smaller amount.");
+		                amountTF.setText("");
+		                amountTF.show();
+		                pinTF.hide();
+		                withdraw1.show();
+		                withdraw2.hide();
+		                text.setText("Please enter amount to withdraw:");
+		                break;
+		            case 3: // erreur serveur
+		            default:
+		                JOptionPane.showMessageDialog(this, "Unable to complete transaction. Try again later.");
+		                amountTF.setText("");
+		                amountTF.show();
+		                pinTF.hide();
+		                withdraw1.show();
+		                withdraw2.hide();
+		                text.setText("Please enter amount to withdraw:");
+		                break;
+		        }
+
+		    } catch (NumberFormatException nfe) {
+		        JOptionPane.showMessageDialog(this, "Invalid amount entered!");
+		        amountTF.requestFocus();
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		        JOptionPane.showMessageDialog(this, "Error connecting to server:\n" + e.getMessage());
+		    }
+
+        } else if (ae.getSource() == back) {
+            setVisible(false);
+            new Transactions(ssn, pin);
+        }
+    }
+
+    private void resetWithdrawForm() {
+        text.setText("Please enter amount to withdraw:");
+        amountTF.setVisible(true);
+        amountTF.setText("");
+        pinTF.setVisible(false);
+        withdraw1.setVisible(true);
+        withdraw2.setVisible(false);
+    }
+
+    public static void main(String[] args) {
+        new Withdraw("1234567890", "2968");
+    }
+}

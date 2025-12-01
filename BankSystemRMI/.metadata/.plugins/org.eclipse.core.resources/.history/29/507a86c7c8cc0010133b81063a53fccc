@@ -1,0 +1,8 @@
+package rmi;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.Naming;
+
+public interface TestRMI extends Remote {
+    void test() throws RemoteException;
+}

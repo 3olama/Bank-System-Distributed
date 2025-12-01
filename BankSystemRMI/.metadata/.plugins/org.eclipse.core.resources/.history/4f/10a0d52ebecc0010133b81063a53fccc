@@ -1,0 +1,14 @@
+/**
+ * 
+ */
+/**
+ * 
+ */
+module BankRMI {
+	 requires java.sql;       // JDBC
+	 requires jcalendar;
+	 requires java.desktop;   // GUI
+
+
+
+}

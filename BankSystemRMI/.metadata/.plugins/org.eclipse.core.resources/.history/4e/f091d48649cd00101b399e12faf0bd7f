@@ -1,0 +1,20 @@
+package server;
+
+import java.rmi.Naming;
+import java.rmi.registry.LocateRegistry;
+
+
+public class ServerMain {
+    public static void main(String[] args) {
+        try {
+            LocateRegistry.createRegistry(1099);               // créer le registre RMI sur le port 1099
+            BankServiceImpl service = new BankServiceImpl(); 
+            Naming.rebind("bankService", service);  // bind le service
+            System.out.println("RMI Server is running...");
+            System.out.println("BankService is ready...");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

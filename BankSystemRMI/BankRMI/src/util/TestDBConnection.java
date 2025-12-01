@@ -1,0 +1,16 @@
+package util;
+
+import java.sql.*;
+
+public class TestDBConnection {
+    public static void main(String[] args) {
+        try {
+            Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/bank_management_system", "root", "MASTERIISE@");
+            System.out.println("Connexion à la base réussie !");
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println("Erreur de connexion : " + e.getMessage());
+        }
+    }
+}

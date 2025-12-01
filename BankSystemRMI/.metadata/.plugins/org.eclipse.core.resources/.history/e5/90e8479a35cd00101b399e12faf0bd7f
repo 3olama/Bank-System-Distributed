@@ -1,0 +1,63 @@
+package client;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class SignupThree extends JFrame implements ActionListener {
+
+    JButton submit;
+    JCheckBox declarations;
+    String formno, ssn;
+
+    public SignupThree(String formno, String ssn) {
+        this.formno = formno;
+        this.ssn = ssn;
+
+        setTitle("NEW ACCOUNT APPLICATION FORM - PAGE 3");
+        setLayout(null);
+
+        JLabel finalDetails = new JLabel("Page 3: Final Details");
+        finalDetails.setFont(new Font("Raleway", Font.BOLD, 25));
+        finalDetails.setBounds(300, 40, 400, 30);
+        add(finalDetails);
+
+        declarations = new JCheckBox("I hereby declare that the above entered details are correct to the best of my knowledge.");
+        declarations.setBounds(50, 150, 800, 50);
+        add(declarations);
+
+        submit = new JButton("Submit");
+        submit.setBounds(600, 600, 100, 30);
+        submit.addActionListener(this);
+        add(submit);
+
+        setSize(850, 750);
+        setLocation(350, 10);
+        setVisible(true);
+        getContentPane().setBackground(Color.WHITE);
+    }
+
+    public void actionPerformed(ActionEvent ae) {
+        if(!declarations.isSelected()) {
+            JOptionPane.showMessageDialog(null, "Please accept the declaration to proceed!");
+            return;
+        }
+
+        try {
+            Conn c = new Conn();
+            String query = "UPDATE CustomerDetails SET verified='Yes' WHERE formno='"+formno+"' AND ssn='"+ssn+"'";
+            c.s.executeUpdate(query);
+            c.s.close();
+
+            JOptionPane.showMessageDialog(null, "Application Submitted Successfully!");
+            setVisible(false);
+            new Login().setVisible(true);
+        } catch(Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public static void main(String[] args) {
+        new SignupThree("", "");
+    }
+}
