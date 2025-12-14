@@ -133,7 +133,7 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
         
     ) throws RemoteException {
         try (Connection conn = util.Conn.getConnection()) {
-        	// 1️⃣ Créer le compte dans Accounts 
+        	//  Créer le compte dans Accounts 
         	String query1 = "INSERT INTO accounts(ssn, type, balance, atmCard, chequeBook, internetBanking, mobileBanking, eStatement, emailSMS, agenceId) VALUES (?, ?, ?, ?, ?,?,?,?,?,?)"; 
         	PreparedStatement ps1 = conn.prepareStatement(query1, PreparedStatement.RETURN_GENERATED_KEYS); 
         	ps1.setString(1, ssn); 
