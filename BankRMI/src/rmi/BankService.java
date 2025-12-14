@@ -9,7 +9,7 @@ import rmi.BankService;
 public interface BankService extends Remote {
 	
 	
-    String login(String cardNumber, String pin) throws RemoteException;
+    String login(String cardNumber, String pin, int atmId) throws RemoteException;
     String signupStepOne(
             String name, String dob,
             String gender, String email, String marital,
@@ -43,18 +43,16 @@ public interface BankService extends Remote {
     
     
     List<String> getAgencies() throws RemoteException;
-    String[] getMiniStatement(String cardNumber) throws RemoteException;
+    String[] getMiniStatement(String cardNumber , int atmId) throws RemoteException;
 
     
 
     double getBalance(String cardNumber) throws RemoteException;
-    boolean deposit(String cardNumber, double amount) throws RemoteException;
-    int withdraw(String cardNumber, double amount, String pin) throws RemoteException;
+    boolean deposit(String cardNumber, double amount, int atmId) throws RemoteException;
+    int withdraw(String cardNumber, double amount, String pin, int atmId) throws RemoteException;
     boolean changePin(String cardNumber, String oldPin, String newPin) throws RemoteException;
-    boolean fastCash(String ssn, int amount) throws RemoteException;
-
-
-     String getCustomerName(String cardNumber) throws RemoteException;
+    boolean fastCash(String ssn, int amount, int atmId) throws RemoteException;
+    String getCustomerName(String cardNumber) throws RemoteException;
 
     
 }

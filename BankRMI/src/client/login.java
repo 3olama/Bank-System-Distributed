@@ -17,10 +17,15 @@ import rmi.BankService;
 public class login extends JFrame implements ActionListener{
 	
 	JButton login, signup, clear;
+	int atmId;
 	JTextField cardNoTF;
 	JPasswordField pinTF;
-	public login()
+	
+	public login() {}
+	public login(int atmId)
 	{	
+        this.atmId = atmId;
+
 		//Add Title to the Frame
 		setTitle("Automated Teller Machine");
 		
@@ -98,11 +103,7 @@ public class login extends JFrame implements ActionListener{
 		
 	}
 
-	public static void main(String[] args)
-	{
-		new login();
-		
-	}
+
  
 	@Override
 	public void actionPerformed(ActionEvent ae)
@@ -126,20 +127,25 @@ public class login extends JFrame implements ActionListener{
 			
 			try
 			{
+				//int atmId =1 ; // ATM physique (lié à une agence)
+
 			    // Connexion au serveur RMI /  cherche le registre RMI en port 1099.
 			    Registry registry = LocateRegistry.getRegistry("localhost", 1099);
 			    // cherche dans le registre le service  "bankService"
 			    BankService service = (BankService) registry.lookup("bankService");
+			    //ou combine automatiquement : la connexion au registre la recherche de l'objet
+			    // BankService service = (BankService) Naming.lookup("rmi://localhost/bankService");
+
 
 			    // client appelle la méthode login
 			    //Le serveur vérifie les informations dans la base de données.
                 //Si le login est correct, le serveur renvoie le SSN de l’utilisateur, sinon null.
-			    ssn = service.login(cardNumber, pin);
+			    ssn = service.login(cardNumber, pin,this.atmId );
 
 			    if (ssn != null) {
 					setVisible(false);
 			       // JOptionPane.showMessageDialog(null, "Login Successful!");
-					new Transactions(cardNumber, pin).setVisible(true);
+					new Transactions(cardNumber, pin, atmId).setVisible(true);
 			        dispose();
 			    } else {
 			        JOptionPane.showMessageDialog(null, "Incorrect Card Number or PIN!");
@@ -163,5 +169,9 @@ public class login extends JFrame implements ActionListener{
 		}
 	
 	}
-
+	 public static void main(String[] args) {
+	        // Lancer 2 ATM avec des IDs différents
+	        SwingUtilities.invokeLater(() -> new login(1)); // ATM 1
+	        SwingUtilities.invokeLater(() -> new login(2)); // ATM 2
+	    }
 }

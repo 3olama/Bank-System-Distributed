@@ -14,42 +14,7 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
     public BankServiceImpl() throws RemoteException {
         super();
     }
-
-    @Override
-    public String login(String cardNumber, String pin) throws RemoteException {
-        String ssn = null;
-
-        try (Connection conn = Conn.getConnection()) { //Appelle la méthode Conn.getConnection()
-            // Préparation de la requête SQL avec paramètres pour sécuriser contre les injections SQL
-            String sql = "SELECT a.ssn FROM card c JOIN accounts a ON c.accountNumber = a.accountNumber WHERE c.cardNumber = ? AND c.pin = ?";
-            // créer l’objet qui enverra la requête à MySQL
-            PreparedStatement ps = conn.prepareStatement(sql);
-            // Remplacement du premier paramètre par le cardNumber fourni
-            ps.setString(1, cardNumber);
-            // Remplacement du second paramètre par le pin fourni
-            ps.setString(2, pin);
-            ResultSet rs = ps.executeQuery();
-         // Si un enregistrement est trouvé on retourne le ssn correspondant
-            if(rs.next()) { 
-            	ssn = rs.getString("ssn");  // Login réussi
-            System.out.println("Login successful for card: " + cardNumber);
-            
-              } else {
-            System.out.println("Login failed for card: " + cardNumber);
-        }
-            rs.close();
-            ps.close();
-        } catch (Exception e) {
-            System.out.println("Login error: " + e.getMessage());
-            e.printStackTrace();
-            throw new RemoteException("Database error in login()", e);
-        }
-        return ssn; // null si user n'a pas trouvé
-    }
-    
-    
-    
-    
+ 
     
     private String generateSSN() {
         return String.valueOf((long)(Math.random() * 9_000_000_000L) + 1_000_000_000L);
@@ -83,10 +48,11 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             int rows = ps.executeUpdate(); //exécute la requête d’insertion.
             ps.close();
+            System.out.println("[SIGNUP STEP 1] Success for SSN: " + ssn);
             return ssn;
-            
         } catch (Exception e) {
-            System.out.println("Signup Step 1 Error: " + e);
+        	System.out.println("[SIGNUP STEP 1] Error: " + e.getMessage());
+        	 e.printStackTrace();
             return null;
         }
     }
@@ -114,10 +80,10 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
         int rows = ps.executeUpdate();
         ps.close();
-        conn.close(); 
-
+        System.out.println("[SIGNUP STEP 2] Success for SSN: " + ssn);
         return true;
-    } catch(Exception e) {
+    } catch (Exception e) {
+        System.out.println("[SIGNUP STEP 2] Error for SSN " + ssn + ": " + e.getMessage());
         e.printStackTrace();
         return false;
     }
@@ -212,9 +178,13 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
         	ps3.executeUpdate(); 
         	ps3.close(); 
         	conn.close();
+        	
+        	
+            System.out.println("[SIGNUP STEP 3] Account, card, and login created successfully for SSN: " + ssn);
         	return true;
 
-        } catch(Exception e) {
+        } catch (Exception e) {
+            System.out.println("[SIGNUP STEP 3] Error for SSN " + ssn + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -222,27 +192,79 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
     
     
     @Override
+    public String login(String cardNumber, String pin , int atmId) throws RemoteException {
+        String ssn = null;
+
+        try (Connection conn = Conn.getConnection()) { //Appelle la méthode Conn.getConnection()
+        	
+        	// Vérifier ATM
+            PreparedStatement p = conn.prepareStatement(
+                "SELECT * FROM atm WHERE atmId = ?"
+            );
+            p.setInt(1, atmId);
+
+            if (!p.executeQuery().next()) {
+                return null; // ATM inconnue
+            }
+            System.out.println("Connexion depuis ATM " + atmId);
+            
+            // Préparation de la requête SQL avec paramètres pour sécuriser contre les injections SQL
+            String sql = "SELECT a.ssn FROM card c JOIN accounts a ON c.accountNumber = a.accountNumber WHERE c.cardNumber = ? AND c.pin = ?";
+            // créer l’objet qui enverra la requête à MySQL
+            PreparedStatement ps = conn.prepareStatement(sql);
+            // Remplacement du premier paramètre par le cardNumber fourni
+            ps.setString(1, cardNumber);
+            // Remplacement du second paramètre par le pin fourni
+            ps.setString(2, pin);
+            ResultSet rs = ps.executeQuery();
+            
+           
+           // Si un enregistrement est trouvé on retourne le ssn correspondant
+            if(rs.next()) { 
+            	ssn = rs.getString("ssn");  // Login réussi
+                System.out.println("[LOGIN] Success for card: " + cardNumber + ", SSN: " + ssn);
+              } else {
+                System.out.println("[LOGIN] Failed for card: " + cardNumber + " (wrong PIN or card)");
+              }
+            
+            //fermer le ResultSet et le PreparedStatement pour libérer les ressources
+            rs.close();
+            ps.close();
+            
+        } catch (Exception e) {
+            System.out.println("Login error: " + e.getMessage());
+            e.printStackTrace();
+            throw new RemoteException("Database error in login()", e);
+        }
+        return ssn; // null si user n'a pas trouvé
+    }
+    
+    
+    @Override
     public double getBalance(String cardNumber) throws RemoteException {
         try (Connection conn = Conn.getConnection()) {
+        	//récupère le solde du compte lié à une carte bancaire.
             String sql = "SELECT a.balance FROM accounts a JOIN card c ON a.accountNumber = c.accountNumber WHERE c.cardNumber=?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1,cardNumber);
             ResultSet rs = ps.executeQuery();
             if(rs.next()) {
               double balance=  rs.getDouble("balance");
+              System.out.println("[GET BALANCE] Balance for card " + cardNumber + ": " + balance);
               return balance;
             }else {
-                System.out.println("Card not found in database!");
+                System.out.println("[GET BALANCE] Card not found: " + cardNumber);
                 return -1; // carte non trouvée
             }
         } catch(Exception e) {
+            System.out.println("[GET BALANCE] Error for card " + cardNumber + ": " + e.getMessage());
             e.printStackTrace();
             return -1;
         }
     }
 
     @Override
-    public boolean deposit(String cardNumber, double amount) throws RemoteException {
+    public boolean deposit(String cardNumber, double amount,int atmId) throws RemoteException {
         try (Connection conn = Conn.getConnection()) {
             conn.setAutoCommit(false);
             //Récupérer le numéro de compte associé au numero de carte
@@ -253,6 +275,7 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             if (!rs.next()) {
                 conn.rollback();
+                System.out.println("[DEPOSIT] Card not found: " + cardNumber);
                 return false;
             }
 
@@ -269,24 +292,28 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             // Enregistrer la transaction
             PreparedStatement psIns = conn.prepareStatement(
-                "INSERT INTO transactions (accountNumber, type, amount, date,details) VALUES (?,?,?,NOW(),?)"
+                "INSERT INTO transactions (accountNumber, type, amount, date,details, atmId) VALUES (?,?,?,NOW(),?,?)"
             );
             psIns.setInt(1, accNumber);
             psIns.setString(2, "Deposit");
             psIns.setDouble(3, amount);
             psIns.setString(4, "Cash deposit");
+            psIns.setInt(5, atmId);
+
             psIns.executeUpdate();
 
             conn.commit();
+            System.out.println("[DEPOSIT] Deposit successful. ATM :" +atmId+ " |  Account: " + accNumber+ "  | Card: " +cardNumber + "| Ammount: " +amount);
             return true;
 
         } catch (Exception e) {
+            System.out.println("[DEPOSIT] Error for card " + cardNumber + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
     @Override
-    public int withdraw(String cardNumber, double amount, String pin) throws RemoteException {
+    public int withdraw(String cardNumber, double amount, String pin, int atmId) throws RemoteException {
         try (Connection conn = Conn.getConnection()) {
             conn.setAutoCommit(false);
 
@@ -296,6 +323,7 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
             psPin.setString(2, pin);
             if (!psPin.executeQuery().next()) {
                 conn.rollback();
+                System.out.println("[WITHDRAW] Incorrect PIN for card: " + cardNumber+ "| ATM: " +atmId);
                 return 1; // PIN incorrect
             }
           
@@ -308,6 +336,8 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             if (!rs.next()) {
                 conn.rollback();
+                System.out.println("[WITHDRAW] Account not found for card: " + cardNumber);
+
                 return 3;
             }
 
@@ -317,6 +347,7 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             if (balance < amount) {
                 conn.rollback();
+                System.out.println("[WITHDRAW] Insufficient balance for account: " + accNumber);
                 return 2; // solde insuffisant
             }
             
@@ -328,18 +359,24 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
             psUpd.executeUpdate();
 
             // Ajouter transaction
-            PreparedStatement psIns = conn.prepareStatement("INSERT INTO transactions(accountNumber, amount, type,date, details) VALUES(?,?,?,NOW(),?)");
+            PreparedStatement psIns = conn.prepareStatement("INSERT INTO transactions(accountNumber, amount, type,date, details, atmId) VALUES(?,?,?,NOW(),?,?)");
             psIns.setInt(1, accNumber);
             psIns.setDouble(2, amount);
             psIns.setString(3, "Withdraw");
             psIns.setString(4, "Cash withdrawal");
+            psIns.setInt(5, atmId);
+
+            
 
             psIns.executeUpdate();
             // commit valide toute opèration
             conn.commit();
+            System.out.println("[WITHDRAW] Withdrawal successful. ATM: " + atmId+ " | Card: " +cardNumber+ " | Account: " + accNumber + " | Amount: " + amount );
+
             return 0; // succès
 
         } catch (Exception e) {
+            System.out.println("[WITHDRAW] Error for card " + cardNumber + ": " + e.getMessage());
             e.printStackTrace();
             return 3; // erreur serveur
         }
@@ -348,7 +385,7 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
     
     
     @Override
-    public boolean fastCash(String cardNumber, int amount) throws RemoteException {
+    public boolean fastCash(String cardNumber, int amount,int atmId) throws RemoteException {
         try (Connection conn = Conn.getConnection()) {
 
             //Récupérer le compte associé à la carte
@@ -360,6 +397,7 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
             ResultSet rs = ps.executeQuery();
 
             if (!rs.next()) {
+                System.out.println("[FAST CASH] Account not found for card: " + cardNumber);
                 return false;
             }
 
@@ -368,29 +406,34 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             //Vérifier solde
             if (balance < amount) {
+                System.out.println("[FAST CASH] Insufficient balance for account: " + accountNumber);
                 return false;
             }
 
             // Enregistrer transaction
-            String sql2 = "INSERT INTO transactions(accountNumber, type, amount, date, details) " +
-                          "VALUES(?, ?, ?, NOW(), ?)";
+            String sql2 = "INSERT INTO transactions(accountNumber, type, amount, date, details, atmId) " +
+                          "VALUES(?, ?, ?, NOW(), ?,?)";
             PreparedStatement ps2 = conn.prepareStatement(sql2);
             ps2.setString(1, accountNumber);
             ps2.setString(2, "fastCash");
-            ps2.setString(4, "ATM Fast Cash");              
+            ps2.setInt(3, amount);
+            ps2.setString(4, "ATM Fast Cash");   
+            ps2.setInt(5, atmId);
 
             ps2.executeUpdate();
 
             //Mettre à jour solde
-            String sql3 = "UPDATE accounts SET balance = balance - ? WHERE account_number = ?";
+            String sql3 = "UPDATE accounts SET balance = balance - ? WHERE accountNumber = ?";
             PreparedStatement ps3 = conn.prepareStatement(sql3);
             ps3.setInt(1, amount);
             ps3.setString(2, accountNumber);
             ps3.executeUpdate();
-            
-
+            System.out.println("[FAST CASH] Fast cash successful.  \" | ATM: " + atmId + " | Card: " + cardNumber + " | Account: " + accountNumber + " | Ammount: " + amount);
+           
             return true;
+            
         } catch (Exception e) {
+            System.out.println("[FAST CASH] Error for card " + cardNumber + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -408,12 +451,15 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
             PreparedStatement ps = conn.prepareStatement(checkQuery);
             ps.setString(1, cardNumber);
             ResultSet rs = ps.executeQuery();
-
-            if (!rs.next()) 
+            if (!rs.next()) {
+                System.out.println("[CHANGE PIN] Card not found: " + cardNumber);
             	return false;
+            }
             String realOldPin = rs.getString("pin");
-
-            if (!realOldPin.equals(oldPin)) return false;
+            if (!realOldPin.equals(oldPin)) {
+                System.out.println("[CHANGE PIN] Incorrect old PIN for card: " + cardNumber);
+                return false;
+            }
 
          // Mettre à jour le pin dans card
             String updateCard = "UPDATE card SET pin = ? WHERE cardNumber = ?";
@@ -432,9 +478,11 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             conn.commit();
             conn.close();
-
+            System.out.println("[CHANGE PIN] PIN changed successfully for card: " + cardNumber);
             return true;
         } catch (Exception e) {
+            System.out.println("[CHANGE PIN] Error for card " + cardNumber + ": " + e.getMessage());
+
             e.printStackTrace();
             return false;
         }
@@ -443,42 +491,53 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
     
     @Override
-    public String[] getMiniStatement(String cardNumber) throws RemoteException {
+    public String[] getMiniStatement(String cardNumber, int atmId) throws RemoteException {
         ArrayList<String> resultList = new ArrayList<>();
         try (Connection conn = Conn.getConnection()) {
 
-            // Créer un Statement
             Statement stmt = conn.createStatement();
 
-            // Nom du client
-            String ssn = "";
+            // Nom du client + agence du compte
             ResultSet rs = stmt.executeQuery(
-                "SELECT c.ssn, c.name FROM Customer c JOIN login l ON c.ssn=l.ssn WHERE l.cardNumber='" + cardNumber + "'"
+                "SELECT c.ssn, c.name, ag.nameAgence AS clientAgence " +
+                "FROM Customer c " +
+                "JOIN login l ON c.ssn = l.ssn " +
+                "JOIN accounts a ON c.ssn = a.ssn " +
+                "JOIN agence ag ON a.agenceId = ag.agenceId " +
+                "WHERE l.cardNumber='" + cardNumber + "'"
             );
-            String name = "";
+
+            String name = "", clientAgence = "";
+            
             if (rs.next()) {
-                ssn = rs.getString("ssn");
                 name = rs.getString("name");
+                clientAgence = rs.getString("clientAgence");
             }
-            resultList.add(name);
+
+
+            // Ajouter infos à la liste (index 0=banque, 1=ATM agence, 2=client agence, 3=nom client)
+            resultList.add("MyBank");    // banque
+            resultList.add(clientAgence);   // agence du compte
+            resultList.add(name);        // nom du client
 
             // Carte masquée
             rs = stmt.executeQuery("SELECT cardNumber FROM Login WHERE cardNumber='" + cardNumber + "'");
+            
             if (rs.next()) {
                 String cNum = rs.getString("cardNumber");
                 String masked = cNum.substring(0, 4) + "-XXXX-XXXX-" + cNum.substring(12);
                 resultList.add(masked);
             }
 
-            //Transactions (10 dernières)
+            // Transactions (10 dernières)
             rs = stmt.executeQuery(
-            		"SELECT t.type, t.date, t.amount " +
-            			    "FROM transactions t " +
-            			    "JOIN accounts a ON t.accountNumber = a.accountNumber " +
-            			    "JOIN login l ON a.ssn = l.ssn " +
-            			    "WHERE l.cardNumber = '" + cardNumber + "' " +
-            			    "ORDER BY t.date DESC " +
-            			    "LIMIT 10"
+                "SELECT t.type, t.date, t.amount " +
+                "FROM transactions t " +
+                "JOIN accounts a ON t.accountNumber = a.accountNumber " +
+                "JOIN login l ON a.ssn = l.ssn " +
+                "WHERE l.cardNumber = '" + cardNumber + "' " +
+                "ORDER BY t.date DESC " +
+                "LIMIT 10"
             );
             while (rs.next()) {
                 resultList.add(rs.getString("type"));
@@ -488,21 +547,22 @@ public class BankServiceImpl extends UnicastRemoteObject implements BankService 
 
             // Solde
             rs = stmt.executeQuery(
-                "SELECT a.balance FROM accounts a JOIN login l ON a.ssn=l.ssn WHERE l.cardNumber='" + cardNumber + "'"
+                "SELECT a.balance FROM accounts a JOIN login l ON a.ssn = l.ssn WHERE l.cardNumber='" + cardNumber + "'"
             );
             if (rs.next()) {
                 resultList.add(rs.getString("balance"));
             }
-
             rs.close();
             stmt.close();
-
+            System.out.println("[MINI STATEMENT] ATM ID: " + atmId + " | Card: " + cardNumber);
         } catch (Exception e) {
+            System.out.println("[MINI STATEMENT] Error for card " + cardNumber + ": " + e.getMessage());
             e.printStackTrace();
         }
 
         return resultList.toArray(new String[0]);
     }
+
 
     
 

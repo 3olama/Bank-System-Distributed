@@ -27,14 +27,16 @@ import rmi.BankService;
 public class MiniStatement extends JFrame implements ActionListener {
 	
 	String cardNumber,pin;
+	int atmId;
 	JLabel pinL, label, text;
 	JButton getStatement, back;
 	JPasswordField pinPF;
-	public MiniStatement(String cardNumber, String pin)
+	public MiniStatement(String cardNumber, String pin, int atmId)
 	{
 		setLayout(null);
         this.cardNumber = cardNumber;
 		this.pin = pin;
+		this.atmId= atmId;
 
 
 		
@@ -84,7 +86,7 @@ public class MiniStatement extends JFrame implements ActionListener {
 	{
 		if (ae.getSource() == back) {
 			setVisible(false);
-			new Transactions(cardNumber, pin).setVisible(true);
+			new Transactions(cardNumber, pin, atmId).setVisible(true);
 		}
 		else if(ae.getSource() == getStatement) 
 		{
@@ -120,9 +122,13 @@ public class MiniStatement extends JFrame implements ActionListener {
                 try {
                     Registry registry = LocateRegistry.getRegistry("localhost", 1099);
                     BankService service = (BankService) registry.lookup("bankService");
-                    String[] miniStatementData = service.getMiniStatement(cardNumber); // Récupère un tableau ou JSON
-                    new MiniStatementResult(cardNumber, miniStatementData);
-                } catch(Exception e){
+                    String[] miniStatementData = service.getMiniStatement(cardNumber, atmId); // Récupère un tableau ou JSON
+                    if (miniStatementData == null || miniStatementData.length == 0) {
+                        JOptionPane.showMessageDialog(this, "No mini statement found for this card.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    new MiniStatementResult(cardNumber, miniStatementData);                } 
+                catch(Exception e){
                     e.printStackTrace();
                 }
         }
@@ -130,6 +136,6 @@ public class MiniStatement extends JFrame implements ActionListener {
    }
 
     public static void main(String[] args) {
-        new MiniStatement("45","4525");
+        new MiniStatement("45","4525",1);
     }
 }

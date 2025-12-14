@@ -23,12 +23,15 @@ public class FastCash extends JFrame implements ActionListener
 
 	JButton amt20, amt50, amt100, amt150, amt200, amt500, amt1000, back;
 	String cardNumber, pin;
-	public FastCash(String cardNumber, String pin) 
+	int atmId;
+	public FastCash(String cardNumber, String pin, int atmId) 
 	{
 		setLayout(null);
 		
 		this.cardNumber = cardNumber;
 		this.pin = pin;
+		this.atmId= atmId;
+		
 		
 		ImageIcon img1 = new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
 		Image img2 = img1.getImage().getScaledInstance(900, 915, Image.SCALE_DEFAULT);
@@ -89,7 +92,7 @@ public class FastCash extends JFrame implements ActionListener
 	{
 		if (ae.getSource() == back) {
             setVisible(false);
-            new Transactions(cardNumber, pin); // retour à l’écran précédent
+            new Transactions(cardNumber, pin, atmId); // retour à l’écran précédent
         } else {
             String amountStr = ((JButton) ae.getSource()).getText().replace("$", "");
             double amount = Double.parseDouble(amountStr);
@@ -98,7 +101,7 @@ public class FastCash extends JFrame implements ActionListener
                 BankService service = (BankService) Naming.lookup("rmi://localhost/bankService");
 
                 // Appel RMI pour retrait
-                int result = service.withdraw(cardNumber, amount, pin);
+                int result = service.withdraw(cardNumber, amount, pin, atmId);
 
                 JOptionPane pane;
                 if (result == 0) {
@@ -117,7 +120,7 @@ public class FastCash extends JFrame implements ActionListener
 
                 if (result == 0) {
                     setVisible(false);
-                    new Transactions(cardNumber, pin);
+                    new Transactions(cardNumber, pin, atmId);
                 }
 
             } catch (Exception e) {
@@ -128,7 +131,7 @@ public class FastCash extends JFrame implements ActionListener
     }
 
     public static void main(String[] args) {
-        new FastCash("1234567890", "2968");
+        new FastCash("1234567890", "2968",1);
     }
 
 

@@ -25,17 +25,19 @@ import javax.swing.JTextField;
 public class deposit extends JFrame implements ActionListener{
 	
 	JButton deposit1, deposit2, back;
+	int atmId;
 	String ssn, pin;
 	JTextField amountTF;
 	JLabel text, label;
 	JPasswordField pinTF;
 
-	public deposit(String ssn, String pin) {
+	public deposit(String ssn, String pin, int atmId) {
 		
 		setLayout(null);
 		
 		this.ssn = ssn;
 		this.pin = pin;
+		 this.atmId = atmId;
 		
 		ImageIcon img1 = new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
 		Image img2 = img1.getImage().getScaledInstance(900, 915, Image.SCALE_DEFAULT);
@@ -119,14 +121,14 @@ public class deposit extends JFrame implements ActionListener{
 	                BankService service = (BankService) registry.lookup("bankService");
 
 	                // Appel RMI pour effectuer le dépôt
-	                boolean success = service.deposit(ssn, Double.parseDouble(amount));
+	                boolean success = service.deposit(ssn, Double.parseDouble(amount),atmId);
 	                if(success) {
 						JOptionPane pane = new JOptionPane("Successfully deposited " + amount + "$ to your account!");
 						JDialog d = pane.createDialog((JFrame)null, "Message");
 						d.setLocation(500,300);
 					    d.setVisible(true);
 						setVisible(false);
-						new Transactions(ssn, pin);						
+						new Transactions(ssn, pin, atmId);						
 					}
 					else 
 					{
@@ -164,12 +166,12 @@ public class deposit extends JFrame implements ActionListener{
 		}
 		else if (ae.getSource() == back) {
 			setVisible(false);
-			new Transactions(ssn, pin);
+			new Transactions(ssn, pin, atmId);
 		}
 		
 	}
 	
 	public static void main(String[] args) {
-		new deposit("1234567890", "2968");
+		new deposit("1234567890", "2968",1);
 	}
 }

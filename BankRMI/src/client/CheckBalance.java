@@ -23,15 +23,18 @@ import rmi.BankService;
 public class CheckBalance extends JFrame implements ActionListener {
 
 	String cardNumber, pin;
+	int atmId;
+
 	JLabel pinL, label, text;
 	JButton checkBalance, back;
 	JPasswordField pinPF;
-	public CheckBalance(String cardNumber, String pin) 
+	public CheckBalance(String cardNumber, String pin, int atmId) 
 	{
 		setLayout(null);
 		
 		this.cardNumber = cardNumber;
 		this.pin = pin;
+		this.atmId=atmId;
 		
 		ImageIcon img1 = new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
 		Image img2 = img1.getImage().getScaledInstance(900, 915, Image.SCALE_DEFAULT);
@@ -77,7 +80,7 @@ public class CheckBalance extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent ae) {
         if (ae.getSource() == back) {
         	setVisible(false);
-            new Transactions(cardNumber, pin).setVisible(true);
+            new Transactions(cardNumber, pin, atmId).setVisible(true);
         } 
         else if (ae.getSource() == checkBalance) {
             String testpin = pinPF.getText();
@@ -117,13 +120,13 @@ public class CheckBalance extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(null,"Unable to connect to the server.\nPlease try again later!");
 
                 setVisible(false);
-                new Transactions(cardNumber, pin).setVisible(true);
+                new Transactions(cardNumber, pin, atmId).setVisible(true);
             }
         }
     }
   }
 
     public static void main(String[] args) {
-		new CheckBalance("1234567890", "2968");
+		new CheckBalance("1234567890", "2968", 1);
     }
 }

@@ -24,16 +24,19 @@ public class Withdraw  extends JFrame implements ActionListener{
 	
 	JButton withdraw1, withdraw2, back;
 	String ssn, pin;
+	int atmId;
+
 	JTextField amountTF;
 	JLabel text, label;
 	JPasswordField pinTF;
 	
-	public Withdraw(String ssn, String pin) {
+	public Withdraw(String ssn, String pin , int atmId) {
 		
 		setLayout(null);
 		
 		this.ssn = ssn;
 		this.pin = pin;
+		 this.atmId = atmId;
 		
 		ImageIcon img1 = new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
 		Image img2 = img1.getImage().getScaledInstance(900, 915, Image.SCALE_DEFAULT);
@@ -119,13 +122,13 @@ public class Withdraw  extends JFrame implements ActionListener{
 		        BankService service = (BankService) registry.lookup("bankService");
 
 		        // Appel de la méthode withdraw côté serveur
-		        int result = service.withdraw(ssn, amountDouble, testpin);
+		        int result = service.withdraw(ssn, amountDouble, testpin, atmId);
 
 		        switch(result) {
 		            case 0: // succès
 		                JOptionPane.showMessageDialog(this, amount + "$ successfully withdrawn!");
 		                setVisible(false);
-		                new Transactions(ssn, testpin);
+		                new Transactions(ssn, testpin, atmId);
 		                break;
 		            case 1: // PIN incorrect
 		                JOptionPane.showMessageDialog(this, "Invalid PIN!");
@@ -163,7 +166,7 @@ public class Withdraw  extends JFrame implements ActionListener{
 
         } else if (ae.getSource() == back) {
             setVisible(false);
-            new Transactions(ssn, pin);
+            new Transactions(ssn, pin, atmId);
         }
     }
 
@@ -177,6 +180,6 @@ public class Withdraw  extends JFrame implements ActionListener{
     }
 
     public static void main(String[] args) {
-        new Withdraw("1234567890", "2968");
+        new Withdraw("1234567890", "2968", 1);
     }
 }

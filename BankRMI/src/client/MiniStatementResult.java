@@ -7,22 +7,29 @@ import javax.swing.*;
 public class MiniStatementResult extends JFrame {
 
     public MiniStatementResult(String cardNumber, String[] miniStatementData) {
+    
         setTitle("Mini Statement");
         setLayout(null);
         
-        JLabel bank = new JLabel("E-Bank");
-        bank.setFont(new Font("Calibri", Font.BOLD, 20));
-        bank.setBounds(160, 30, 100, 25);
-        add(bank);
+        JLabel bankJL = new JLabel("Bank: " + miniStatementData[0]);
+        bankJL.setFont(new Font("Calibri", Font.BOLD, 20));
+        bankJL.setBounds(160, 30, 200, 25);
+        add(bankJL);
+        
+        // Nom de l'agence
+        JLabel agencyJL = new JLabel("Agency: " + miniStatementData[1]);
+        agencyJL.setFont(new Font("Calibri", Font.BOLD, 15));
+        agencyJL.setBounds(20, 50, 300, 20);
+        add(agencyJL);
         
         // Nom du client récupéré via RMI
-        JLabel nameJL = new JLabel("Name: " + miniStatementData[0]); // exemple: miniStatementData[0] = nom
+        JLabel nameJL = new JLabel("Name: " + miniStatementData[2]); // exemple: miniStatementData[0] = nom
         nameJL.setFont(new Font("Calibri", Font.BOLD, 15));
         nameJL.setBounds(20, 90, 300, 20);
         add(nameJL);
         
         // Numéro de carte masqué
-        JLabel cardJL = new JLabel("Card Number: " + miniStatementData[1]); // miniStatementData[1] = carte masquée
+        JLabel cardJL = new JLabel("Card Number: " + miniStatementData[3]); // miniStatementData[1] = carte masquée
         cardJL.setFont(new Font("Calibri", Font.BOLD, 15));
         cardJL.setBounds(20, 110, 300, 20);
         add(cardJL);
@@ -31,8 +38,8 @@ public class MiniStatementResult extends JFrame {
         JLabel mini = new JLabel();
         mini.setBounds(20, 140, 400, 300);
         add(mini);
-        StringBuilder html = new StringBuilder("<html><table><tr><th>Type</th><th>Date</th><th>Amount</th></tr>");
-        for(int i=2; i+2 <miniStatementData.length -1 ; i+=3) { // 3 colonnes par ligne
+        StringBuilder html = new StringBuilder("<html><table border='1' ><tr><th>Type</th><th>Date</th><th>Amount</th></tr>");
+        for(int i=4; i+2 <miniStatementData.length -1 ; i+=3) { // 3 colonnes par ligne
             html.append("<tr><td>").append(miniStatementData[i])
                 .append("</td><td>").append(miniStatementData[i+1])
                 .append("</td><td>").append(miniStatementData[i+2])

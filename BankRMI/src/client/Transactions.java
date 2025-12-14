@@ -23,12 +23,14 @@ public class Transactions extends JFrame implements ActionListener {
 
     JButton deposit, withdraw, fastCash, miniStatement, pinChange, balance, exit;
     String ssn, pin, cardNumber;
+    int atmId;
 
-    public Transactions(String cardNumber, String pin) {
+    public Transactions(String cardNumber, String pin, int atmId) {
         setLayout(null);
 
         this.pin = pin;
         this.cardNumber=cardNumber;
+        this.atmId = atmId;
         String name = "";
 
         try {
@@ -107,25 +109,25 @@ public class Transactions extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent ae) {
         if (ae.getSource() == deposit) {
             setVisible(false);
-            new deposit(cardNumber, pin);
+            new deposit(cardNumber, pin, atmId);
         } else if (ae.getSource() == withdraw) {
             setVisible(false);
-            new Withdraw(cardNumber, pin);
+            new Withdraw(cardNumber, pin, atmId);
         } else if (ae.getSource() == balance) {
             setVisible(false);
-			new CheckBalance(cardNumber, pin);
+			new CheckBalance(cardNumber, pin,atmId);
         } 
         else if (ae.getSource() == pinChange) {
             setVisible(false);
-			new PinChange(cardNumber, pin);
+			new PinChange(cardNumber, pin, atmId);
         }
         else if (ae.getSource() == fastCash) {
             setVisible(false);
-			new  FastCash(cardNumber, pin);
+			new  FastCash(cardNumber, pin, atmId);
         }
         else if (ae.getSource() == miniStatement) {
 			setVisible(false);
-			new MiniStatement(cardNumber,pin);
+			new MiniStatement(cardNumber,pin , atmId);
 		}
 	   else if (ae.getSource() == exit) {
             System.exit(0);
@@ -135,6 +137,6 @@ public class Transactions extends JFrame implements ActionListener {
     }
 
     public static void main(String args[]) {
-        new Transactions("1234567890", "2968"); // exemple
+        new Transactions("1234567890", "2968",1); // exemple
     }
 }

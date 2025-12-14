@@ -23,15 +23,20 @@ import java.rmi.registry.Registry;
 public class PinChange extends JFrame implements ActionListener
 {
 	String ssn, pin;
+	int atmId;
+
+	
+	
 	JLabel text, oldPin, newPin, label, constraint1, constraint2;
 	JButton confirm, back;
 	JPasswordField oldPinTF, newPinTF;
-	public PinChange(String ssn, String pin)
+	public PinChange(String ssn, String pin, int atmId)
 	{
 		setLayout(null);
 		
 		this.ssn = ssn;
 		this.pin = pin;
+		this.atmId=atmId;
 		
 		ImageIcon img1 = new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
 		Image img2 = img1.getImage().getScaledInstance(900, 915, Image.SCALE_DEFAULT);
@@ -102,7 +107,7 @@ public class PinChange extends JFrame implements ActionListener
 	{
 		if (ae.getSource() == back) {
 			setVisible(false);
-			new Transactions(ssn, pin).setVisible(true);;
+			new Transactions(ssn, pin, atmId).setVisible(true);
 		}
 		else if(ae.getSource() == confirm) 
 		{
@@ -165,7 +170,7 @@ public class PinChange extends JFrame implements ActionListener
 				    	JOptionPane.showMessageDialog(this, "PIN changed successfully!");
 				        pin = newPin;
 				        setVisible(false);
-				        new Transactions(ssn, pin);
+				        new Transactions(ssn, pin, atmId);
 				    } else {
 				        JOptionPane.showMessageDialog(this, "Failed to change PIN! Check your old PIN.");
 				    }
@@ -200,7 +205,7 @@ public class PinChange extends JFrame implements ActionListener
 	}
 	
 	public static void main(String[] args) {
-		new PinChange("1234567890", "2968");
+		new PinChange("1234567890", "2968", 1);
 	}
 
 }
